@@ -1,0 +1,29 @@
+import 'iterators'
+
+param orderLineId: uuid
+param productRate: number
+param orderRate: number
+
+let matchingLines =
+  order.fulfillments
+  select fulfillment => fulfillment.orderLines
+  flatten
+  where line => line.orderLineId == orderLineId
+  buffer
+
+let line = matchingLines first
+let ratesValid = productRate >= 0 and productRate <= 1 and orderRate >= 0 and orderRate <= 1
+
+from ratesValid match
+  true |> line match
+    (item: OrderLine) |>
+      let quantity = item.quantity - item.returnedQuantity
+      let basis = item.unitPrice * quantity
+      let productDiscount = basis * productRate
+      let orderDiscount = (basis - productDiscount) * orderRate
+      let lineTarget = target(entity => entity is OrderLine and entity.orderLineId == orderLineId)
+
+      from [
+        group('product', 'Product discount', { step = 'product' }, [absolute(lineTarget, productDiscount)]),
+        group('order', 'Order discount', { step = 'order' }, [absolute(lineTarget, orderDiscount)])
+      ]

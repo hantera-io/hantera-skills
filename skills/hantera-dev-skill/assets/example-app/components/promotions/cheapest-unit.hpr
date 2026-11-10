@@ -1,0 +1,32 @@
+import 'iterators'
+import 'math'
+
+param eligibleProducts: [text]
+param batchSize: number
+
+let units =
+  order.fulfillments
+  select fulfillment => fulfillment.orderLines
+  flatten
+  where line =>
+    let matches =
+      eligibleProducts
+      where product => product == line.productNumber
+      count
+    from matches > 0
+  select line => line repeat (line.quantity - line.returnedQuantity)
+  flatten
+  order by unitPrice asc
+  buffer
+
+let freeCount = batchSize > 0 match
+  true |> ((units count) / batchSize) floor
+  |> 0
+
+from
+  units
+  take freeCount
+  select line => unitPercentage(
+    target(entity => entity is OrderLine and entity.orderLineId == line.orderLineId),
+    100%
+  )

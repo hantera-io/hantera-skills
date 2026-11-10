@@ -1,0 +1,22 @@
+import 'iterators'
+import 'text'
+import 'json'
+import 'crypt'
+
+param body: [byte]
+param signature: text
+
+let secret = registry->'apps/skill-examples/settings/webhookSecret'
+let bufferedBody = body buffer
+
+from secret match
+  (key: text) when key != '' |>
+    let verified = (bufferedBody, signature decode hex, key decode text) isValidHmacSha256
+    from verified match
+      false |> { error = { code = 'INVALID_SIGNATURE', message = 'Signature verification failed' } }
+      true |>
+        let event = bufferedBody encode text parseJson
+        from event match
+          (payload: { orderId: text }) when payload.orderId != '' |> { orderId = payload.orderId }
+          |> { error = { code = 'INVALID_EVENT', message = 'Event requires an order ID' } }
+  |> { error = { code = 'NOT_CONFIGURED', message = 'Webhook secret is missing' } }

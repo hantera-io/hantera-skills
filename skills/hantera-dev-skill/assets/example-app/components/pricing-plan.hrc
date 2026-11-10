@@ -1,0 +1,18 @@
+param basis: number
+param productRate: number
+param orderRate: number
+
+let valid = basis >= 0 and productRate >= 0 and productRate <= 1 and orderRate >= 0 and orderRate <= 1
+
+from valid match
+  false |> { error = { code = 'INVALID_PRICING_INPUT', message = 'Basis and rates must be in range' } }
+  true |>
+    let productDiscount = basis * productRate
+    let orderBasis = basis - productDiscount
+    let orderDiscount = orderBasis * orderRate
+    from {
+      productDiscount = productDiscount
+      orderDiscount = orderDiscount
+      totalDiscount = productDiscount + orderDiscount
+      finalAmount = orderBasis - orderDiscount
+    }

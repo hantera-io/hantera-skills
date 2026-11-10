@@ -1,0 +1,11 @@
+import 'text'
+import 'crypt'
+
+param body: [byte]
+param signature: text
+param secret: text
+
+let signatureBytes = signature decode hex
+let secretBytes = secret decode text
+
+from (body, signatureBytes, secretBytes) isValidHmacSha256

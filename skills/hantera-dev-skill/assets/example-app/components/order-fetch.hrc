@@ -1,0 +1,8 @@
+param sourceOrderId: text
+
+let result = { orderId = sourceOrderId } call 'apps/skill-examples/source-order'
+
+from result match
+  (failure: Error) |> failure
+  (response: { content: value }) |> response.content
+  |> { error = { code = 'INVALID_SOURCE_RESPONSE', message = 'Source response is not usable' } }

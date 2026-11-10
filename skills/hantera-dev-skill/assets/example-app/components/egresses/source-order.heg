@@ -1,0 +1,21 @@
+import 'text'
+
+param orderId: text
+
+let baseUrl = registry->'apps/skill-examples/settings/sourceBaseUrl'
+let apiKey = registry->'apps/skill-examples/settings/sourceApiKey'
+
+from (baseUrl, apiKey) match
+  (url: text, key: text) when url trim != '' and key trim != '' |>
+    let encodedId = orderId asUrlEncoded
+    let response = http {
+      method = 'GET'
+      url = $'{url}/orders?id={encodedId}'
+      headers = { 'Authorization' -> $'Bearer {key}' }
+    }
+
+    from response.status match
+      200 |> { content = response.body }
+      0 |> { error = { code = 'SOURCE_UNREACHABLE', message = 'Source could not be reached' } }
+      |> { error = { code = 'SOURCE_HTTP_ERROR', message = $'Source returned HTTP {response.status}' } }
+  |> { error = { code = 'SOURCE_NOT_CONFIGURED', message = 'Source settings are missing' } }

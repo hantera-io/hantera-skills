@@ -1,0 +1,39 @@
+import 'iterators'
+import 'maps'
+import 'text'
+
+let Item: {
+  code: text
+  quantity: number
+  note?: text
+}
+
+param items: [Item]
+
+let normalize (code: text) => code trim asUpperCase
+let doubled (amount: number) |> amount * 2
+
+let normalized =
+  items
+  where item => item.quantity > 0
+  select item => {
+    code = normalize item.code
+    quantity = item.quantity
+    doubled = item.quantity doubled
+    note = item.note match
+      (value: text) |> value
+      |> ''
+  }
+  buffer
+
+let quantities =
+  normalized
+  select item => item.quantity
+  reduce 0 using (total, quantity) => total + quantity
+
+let firstItem = normalized first
+let firstCode = firstItem match
+  (item: { code: text }) |> item.code
+  |> nothing
+
+from { items = normalized, totalQuantity = quantities, firstCode = firstCode }

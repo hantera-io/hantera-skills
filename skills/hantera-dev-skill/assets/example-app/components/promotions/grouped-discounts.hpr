@@ -1,0 +1,10 @@
+param productNumber: text
+param firstDiscount: number
+param secondDiscount: number
+
+let productTarget = target(entity => entity is OrderLine and entity.productNumber == productNumber)
+
+from [
+  group('first', 'First discount', { source = 'example', step = 'first' }, [absolute(productTarget, firstDiscount)]),
+  group('second', 'Second discount', { source = 'example', step = 'second' }, [absolute(productTarget, secondDiscount)])
+]

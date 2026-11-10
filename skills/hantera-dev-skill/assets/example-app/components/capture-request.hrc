@@ -1,0 +1,4 @@
+param externalReference: text
+param amount: number
+
+from { externalReference = externalReference, requestedAmount = amount }

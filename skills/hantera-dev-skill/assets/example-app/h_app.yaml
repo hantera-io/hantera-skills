@@ -1,0 +1,70 @@
+id: skill-examples
+name: Hantera Skill Examples
+description: Isolated examples for Filtrera and Hantera runtimes.
+components:
+  - id: language.hrc
+  - id: payment-plan.hrc
+  - id: pricing-plan.hrc
+  - id: hmac-verify.hrc
+  - id: webhook-validate.hrc
+  - id: capture-request.hrc
+  - id: order-create.hrc
+  - id: order-fetch.hrc
+  - id: egresses/source-order.heg
+  - id: rules/payment-dispatch.hrl
+  - id: promotions/cheapest-unit.hpr
+  - id: promotions/grouped-discounts.hpr
+  - id: promotions/single-line-progressive.hpr
+ingresses:
+  - id: payment-plan
+    componentId: payment-plan.hrc
+    type: http
+    properties:
+      route: skill-examples/payment-plan
+      httpMethod: POST
+      body:
+        mode: structured
+      isPublic: false
+  - id: pricing-plan
+    componentId: pricing-plan.hrc
+    type: http
+    properties:
+      route: skill-examples/pricing-plan
+      httpMethod: POST
+      body:
+        mode: structured
+      isPublic: false
+egresses:
+  - id: source-order
+    componentId: egresses/source-order.heg
+    idempotent: true
+    acl:
+      - registry/apps/skill-examples:read
+jobDefinitions:
+  capture-request:
+    componentId: capture-request.hrc
+    parameters:
+      externalReference:
+        type: text
+        required: true
+      amount:
+        type: number
+        required: true
+settings:
+  sourceBaseUrl:
+    label:
+      default: Example source base URL
+    editor:
+      type: text
+  sourceApiKey:
+    label:
+      default: Example source API key
+    secret: true
+    editor:
+      type: text
+  webhookSecret:
+    label:
+      default: Example webhook secret
+    secret: true
+    editor:
+      type: text

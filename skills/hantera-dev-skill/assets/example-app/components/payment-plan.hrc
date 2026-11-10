@@ -1,0 +1,16 @@
+param captured: number
+param refunded: number
+param chargedBalance: number
+
+let delta = captured - refunded - chargedBalance
+
+from delta match
+  when captured < 0 or refunded < 0 or refunded > captured |> {
+    error = {
+      code = 'INVALID_PROVIDER_AMOUNTS'
+      message = 'Captured and refunded amounts are inconsistent'
+    }
+  }
+  when delta > 0 |> { action = 'charge', amount = delta }
+  when delta < 0 |> { action = 'refund', amount = 0 - delta }
+  |> { action = 'none', amount = 0 }

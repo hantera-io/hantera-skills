@@ -1,0 +1,53 @@
+import 'iterators'
+
+param orderNumber: text
+param currencyCode: text
+param items: [{ productNumber: text, quantity: number, unitPrice: number }]
+
+let invalidItems =
+  items
+  where item => item.productNumber == '' or item.quantity <= 0 or item.unitPrice < 0
+  count
+
+let valid = orderNumber != '' and currencyCode != '' and (items count) > 0 and invalidItems == 0
+
+from valid match
+  false |> { error = { code = 'INVALID_ORDER', message = 'Order data is invalid' } }
+  true |>
+    let fulfillmentId = newid
+    let lineCommands =
+      items
+      select item => {
+        type = 'createOrderLine'
+        orderLineId = newid
+        fulfillmentId = fulfillmentId
+        productNumber = item.productNumber
+        quantity = item.quantity
+        unitPrice = item.unitPrice
+      }
+      buffer
+
+    let commands = [[{
+      type = 'createFulfillment'
+      fulfillmentId = fulfillmentId
+    }], lineCommands] flatten
+
+    let result = messageActor(
+      'order',
+      'new',
+      [{
+        type = 'create'
+        body = {
+          orderNumber = orderNumber
+          currencyCode = currencyCode
+          taxIncluded = true
+          commands = commands
+        }
+      }]
+    )
+
+    from result.errors count > 0 match
+      true |> { error = { code = 'ORDER_CREATE_FAILED', message = 'Order creation failed', details = result.errors } }
+      |> result.actorId match
+        (id: uuid) |> { orderId = id }
+        |> { error = { code = 'ORDER_CREATE_FAILED', message = 'Order creation returned no actor ID' } }
