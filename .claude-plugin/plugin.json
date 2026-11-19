@@ -1,0 +1,12 @@
+{
+  "name": "hantera",
+  "version": "0.1.0",
+  "description": "Build and maintain Hantera_ apps and tenant resources: Filtrera, app manifests, Graph, the CLI, Portal extensions and integration guides.",
+  "author": {
+    "name": "Hantera",
+    "url": "https://www.hantera.io"
+  },
+  "homepage": "https://developer.hantera.io",
+  "repository": "https://github.com/hantera-io/hantera-skills",
+  "keywords": ["hantera", "filtrera", "commerce", "app-development"]
+}

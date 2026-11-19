@@ -10,6 +10,25 @@ Reusable [Agent Skills](https://agentskills.io/) for people who build on and mai
 
 The integration guides are adaptable design patterns, not complete provider implementations. Verify the target tenant and provider contracts, security and commercial semantics, and test in a dedicated development tenant before deployment.
 
+## Claude Code plugin
+
+This repository is also a Claude Code plugin marketplace. The `hantera` plugin includes:
+
+- the skills under `skills/`, so they stay current without copying;
+- the `hantera-dev` MCP server (`h_ mcp`): signs in to a tenant, reads its Graph metadata and resources, runs dev sessions and app tests, and opens the Portal in local development mode;
+- the Hantera language server (`h_ lsp`): reports Filtrera errors in `.hrc`, `.hrl`, `.hpr` and `.heg` files after each edit, checked against the Graph of the tenant selected in `hantera-dev`.
+
+```text
+/plugin marketplace add hantera-io/hantera-skills
+/plugin install hantera@hantera
+```
+
+The plugin needs [Node.js](https://nodejs.org/) 22 or later. It runs the latest published [Hantera CLI](https://developer.hantera.io/learn/hantera-cli.md) through `npx`; nothing else needs to be installed. Sign-ins are shared with the CLI.
+
+In the plugin, the skill is available as `/hantera:hantera-dev-skill`. Run `/plugin marketplace update hantera` to pick up new releases. Bump `version` in `.claude-plugin/plugin.json` when releasing changes; installed copies only update when it changes.
+
+To try a local CLI build instead of the published one, set `HANTERA_CLI` to its entry point (for example `<hantera repo>/cli/dist/index.js`) before starting Claude Code. `HANTERA_LANGUAGE_SERVER` can point the CLI at a local language server build.
+
 ## Install a skill
 
 Clone or download this repository. Copy the **individual** `skills/hantera-dev-skill/` directory, including `SKILL.md`, `references/` and `assets/`, to one of the supported locations below. The destination folder must be named `hantera-dev-skill`.

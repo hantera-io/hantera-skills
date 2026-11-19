@@ -33,7 +33,7 @@ Store credentials in app settings marked secret; keep tenant-local settings out 
 
 ## Portal extensions
 
-Portal extensions are optional. Use the existing app scaffold, compatible Vue/TypeScript packages and the documented slot, view, navigation and service contracts. Register extensions from `portal/index.ts`, use the slot's typed context and existing design-system components, and check user permissions for actions. Authorize again at the server boundary; hiding a button is not authorization. Do not put credentials in browser code. See [Portal extensions](https://developer.hantera.io/resources/apps/portal-extensions.md).
+Portal extensions are optional. Add one with the scaffolder (see [Scaffold an app or a Portal extension](cli-and-testing.md#scaffold-an-app-or-a-portal-extension)) and use compatible Vue/TypeScript packages and the documented slot, view, navigation and service contracts. Register extensions from `portal/index.ts`, use the slot's typed context and existing design-system components, and check user permissions for actions. Authorize again at the server boundary; hiding a button is not authorization. Do not put credentials in browser code. See [Portal extensions](https://developer.hantera.io/resources/apps/portal-extensions.md), and [Portal extensions](portal-extensions.md) for views, navigation, Graph tables and where to find the package typings.
 
 ## Related
 

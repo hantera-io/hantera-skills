@@ -33,4 +33,4 @@ For a server whose discovered `system_graph_query` schema accepts a `queries` ar
 
 This is the **tool arguments object**, not a JSON-RPC wrapper or a GraphQL query. The current tool enforces bounds, and limits may change; consult discovery. Add filters or navigations only after checking fields and permissions, and avoid retrieving unnecessary customer data. For complete results, use supported pagination or a documented API strategy; do not assume a capped result is exhaustive.
 
-If MCP is unavailable, the authenticated `GET /resources/graph/meta` endpoint supplies Graph metadata and the [Graph documentation](https://developer.hantera.io/resources/graph.md) describes the JSON API. Access is still permission-gated.
+If MCP is unavailable, the authenticated `GET /resources/graph` endpoint supplies Graph metadata (`GET /resources/graph/<node>` for one node) and the [Graph documentation](https://developer.hantera.io/resources/graph.md) describes the JSON API. Access is still permission-gated.

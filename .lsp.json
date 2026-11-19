@@ -1,0 +1,17 @@
+{
+  "hantera": {
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/hantera-cli.mjs", "lsp"],
+    "extensionToLanguage": {
+      ".hrule": "filtrera.hantera.rule",
+      ".hrl": "filtrera.hantera.rule",
+      ".hreactor": "filtrera.hantera.reactor",
+      ".hrc": "filtrera.hantera.reactor",
+      ".hpromo": "filtrera.hantera.promotion",
+      ".hpr": "filtrera.hantera.promotion",
+      ".hegress": "filtrera.hantera.egress",
+      ".heg": "filtrera.hantera.egress"
+    },
+    "startupTimeout": 120000
+  }
+}

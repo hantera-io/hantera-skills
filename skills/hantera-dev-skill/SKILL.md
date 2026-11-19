@@ -1,6 +1,6 @@
 ---
 name: hantera-dev-skill
-description: Develop and maintain Hantera tenants and apps. Use for Hantera resources, actors, Graph, Filtrera, CLI, MCP, app manifests, Portal extensions, payments, commerce and marketplace integrations, order imports, promotions, and discounts.
+description: Develop and maintain Hantera tenants and apps. Use for Hantera resources, actors, Graph, Filtrera, CLI, MCP, app manifests, Portal extensions, payments, commerce and marketplace integrations, purchase intents and quotes, order imports, promotions, and discounts.
 ---
 
 # Hantera developer skill
@@ -11,7 +11,10 @@ Help developers build apps and manage tenant resources safely. Hantera resources
 
 1. Identify the tenant, installed apps, relevant versions, user goal, and whether the task requires reads or changes. Inspect the project's existing conventions and dependencies before editing.
 2. Read the matching guides below. Consult the current public documentation and discover the target tenant's live contracts before relying on an API, Graph field, runtime feature, or app integration.
-3. For tenant introspection, use the connected Hantera MCP's discovery and Graph metadata. Use the schemas actually advertised by that server; do not guess resource URIs, tool arguments, permissions, or installed apps. See [MCP and Graph](references/mcp-and-graph.md).
+3. For tenant introspection, use the available Hantera tools' discovery and Graph metadata. Use the schemas actually advertised; do not guess resource URIs, tool arguments, permissions, or installed apps.
+   - If local `hantera-dev` tools are available (for example from the Hantera Claude Code plugin), use them for all tenant reads, development sessions and tests in the task. They act on the tenant of their active session and report it; prefer them over running the CLI in a shell.
+   - Do not use another Hantera MCP server for the same work unless the user asks. It may be connected to a different tenant; confirm it targets the same tenant before relying on its data.
+   - Otherwise, use a connected remote Hantera MCP server. See [MCP and Graph](references/mcp-and-graph.md).
 4. Choose the smallest coherent design: actor messages for domain changes; rules for supported hooks and effects; jobs for asynchronous work; ingresses for inbound requests; egresses for outbound integration; promotions for recalculable pricing. Declare required resources, contracts, and least-privilege ACLs.
 5. Implement and test using the target project's conventions. For Filtrera, build a correct immutable model first, then validate in the appropriate runtime. Use the CLI's server compile/test gate, not packaging alone, when a safe test tenant is available.
 6. Report changes, test results, assumptions, unsupported cases, and any tenant operations performed. Never claim an integration is production-ready without provider-specific contract and lifecycle tests.
@@ -28,6 +31,7 @@ Help developers build apps and manage tenant resources safely. Hantera resources
 | Task | Guide |
 | --- | --- |
 | Platform model, actors, resources, apps, permissions, Portal | [Platform and apps](references/platform-and-apps.md) |
+| Portal views, sidebar navigation, Graph DataTables, design-system components | [Portal extensions](references/portal-extensions.md) |
 | Sessions, local development, compile, test, deployment and tenant resources | [CLI and testing](references/cli-and-testing.md) |
 | MCP setup and discovery, live Graph metadata, tenant queries | [MCP and Graph](references/mcp-and-graph.md) |
 | Filtrera syntax, types, runtimes and common errors | [Filtrera](references/filtrera.md) |
@@ -36,6 +40,7 @@ Help developers build apps and manage tenant resources safely. Hantera resources
 | HTTP, events, jobs, retries, ACLs and integration boundaries | [Integration patterns](references/integration-patterns.md) |
 | Payment provider app and optional commerce/Portal integration | [Payment provider guide](references/payment-provider.md) |
 | Commerce channel or marketplace order integration | [Sales channel guide](references/sales-channel.md) |
+| Quote-like purchase intent, order preview and line discounts | [Purchase-intent pattern](references/purchase-intent.md) |
 | Importing and recalculating source promotions | [Promotion mirroring](references/promotion-mirroring.md) |
 
 Start with [Hantera developer documentation](https://developer.hantera.io/), its [documentation index](https://developer.hantera.io/llms.txt), and [Filtrera standard modules](https://www.filtrera.io/modules/). For exact contracts, prioritize the connected tenant's MCP metadata and tool schemas; consult current public docs and installed package versions. If they disagree, investigate instead of silently assuming compatibility. Example components under [assets/example-app](assets/example-app/h_app.yaml) illustrate patterns, not a production integration.
