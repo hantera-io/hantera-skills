@@ -20,6 +20,18 @@ Record the provider's authentication and signing scheme, currency/minor-unit rul
 
 Some providers have immediate charges rather than a separate authorization, or different capture/refund models. Implement only supported flows, explicitly surface unsupported cases, and verify the mapping against the current [authorization lifecycle](https://developer.hantera.io/resources/actors/payment/authorization-lifecycle.md).
 
+## Payments on orders: link, charge, capture
+
+These semantics apply to any app that records money against orders, not only PSP integrations (for example manually booked bank transfers or prepayments). Verify them against the target version.
+
+- **Create with `'new'`.** `messageActor('payment', 'new', [{ type = 'create', body = { currencyCode, providerKey, externalReference, commands = [...] } }], false)` creates a payment. Sending `create` to an explicit uuid looks that actor up and fails with "Actor not found". Address the payment afterwards by its unique `externalReference` (also accepted as the actor id) or query its `paymentId` by `externalReference`.
+- **Link explicitly and check it.** The order command `linkPayment { paymentId }` links a payment to an order. A link to a payment id that does not exist can succeed without an error, so read the payment back before linking and verify the link.
+- **Charging never captures.** `charge { amount, transactionReference? }` raises `chargedBalance` (money received). Applying it to invoices is a separate order message, `capturePayments`, which captures linked payments' uncaptured money against open invoices and is a no-op when nothing can be captured. Core does not send it on its own: send it after invoicing (for example from an `OnOrderCommands` rule that sees new invoices, or from the job that invoices) and after recording a charge that may settle open invoices. Send it without a `body` (an empty `body = {}` fails type checking). It needs `actors/order:capturePayments`.
+- **Balances.** `chargedBalance` is money received, `capturedBalance` is what has been applied to invoices, and `creditBalance` is the difference (prepaid credit not yet used).
+- **One payment actor per instrument, never shared between orders.** Charged money is not attributed to an order, so a payment linked to several orders lets one order capture money another customer paid. For recurring billing, model one actor per card, and one long-lived actor per account for bank transfers with one charge per received transfer.
+- **Idempotent charges.** Payment journal entries expose `transactionReference` (Graph `paymentJournalEntry`, edge `payment.journalEntries`). Before charging, check that the provider or bank reference is not already charged on that payment. Capture entries have no transaction reference, so type it `text | nothing` when matching query results.
+- **Deletion order.** A payment cannot be deleted while an order links it; delete or unlink the orders first. Orders with captured payments may refuse deletion, so test cleanup paths on disposable data.
+
 ## Reconciliation model
 
 Reconcile **authorization** and **money** independently. The remaining amount available to capture is not the same as the amount already charged; a refund is money out, not a negative authorization.

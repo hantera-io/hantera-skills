@@ -46,6 +46,13 @@ After adding a Portal extension to an app with a running dev session, restart th
 4. `h_ app pack` validates manifest wiring and creates a `.hapk`; **packing alone does not type-check all Filtrera bodies**. Use the real server compile/test gate as well. If no suitable tenant is available, report that validation gap.
 5. Test behavior through public app APIs using the documented `tests/*.test.mjs` or `.js`, Node's built-in test runner, and `@hantera/cli/test` helpers where supported. Test negative cases, retries and authorization, not just successful compilation.
 
+With the `hantera-dev` MCP tools:
+
+- `get_dev_session` waits for file edits the watcher has already seen before it answers. If it reports `syncing: true` (or the CLI is older and has no `syncing` field), its errors may predate your latest edits; call `sync_dev_session`, which pushes every file and returns definite compilation errors.
+- Edits made while an update is being applied are sent together as one update, and each update recompiles the whole app on the server. Prefer finishing a set of related edits quickly over interleaving edits with long waits.
+- Pass a high `sinceEventId` (or the previous `lastEventId`) to `get_dev_session` to read the current errors without replaying old events.
+- A new component file is synced once `h_app.yaml` lists it; a manifest change pushes everything.
+
 Use `h_ app dev --help` and `h_ app test --help` for version-specific flags. Development traces can contain sensitive data; collect them only when necessary, protect them and avoid publishing them.
 
 ## Resource management

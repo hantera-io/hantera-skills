@@ -6,6 +6,18 @@ Hantera organizes capabilities as addressable resources with resource-specific A
 
 Actors manage business entities such as orders, payments, SKUs, assets and tickets. Send supported **messages** to actors; messages may contain **commands** that the actor validates and applies. Use the Graph for reads, not as a direct write mechanism. Inspect the actual message and command contracts before forming requests. Related data and custom fields can be queried through Graph subject to authorization.
 
+### Order commands worth knowing
+
+Send these inside an order `applyCommands` message (`body = { commands = [...] }`); check the target's command contract for exact fields.
+
+- `setOrderDynamicFields { fields }` writes order dynamic fields. To query or filter one in the Graph (`order.<name>`), declare it as a registry entry `/graph/order/fields/<name>` (with its type) in the manifest; other nodes follow the same pattern (for example `/graph/orderLine/fields/<name>`).
+- `addActivityLog { messageTemplate, dynamic }` adds an audit entry to the order timeline; `{placeholders}` in the template are filled from `dynamic`. Use it for manual or financially relevant changes (who changed what, previous value, reason).
+- `setOrderLineTax { orderLineId, taxFactor }` sets a line's tax factor (`0.25` = 25 %).
+- `setInvoiceRecipient` accepts `taxId` (the VAT number). Graph returns it inside the `invoiceRecipient` record.
+- `linkPayment { paymentId }` links a payment; see [payments on orders](payment-provider.md#payments-on-orders-link-charge-capture).
+
+When the Hantera Products app is installed, lines whose product number is not a known product are rejected unless its `ignoreUnknownProducts` setting is on, and Products replaces the line description with the product name. Apps that generate lines should create their products, or keep their own identity in line dynamic fields rather than in the description.
+
 ## App resources and responsibilities
 
 An app directory has an `h_app.yaml` manifest. Depending on the problem, declare:

@@ -31,14 +31,14 @@ Help developers build apps and manage tenant resources safely. Hantera resources
 | Task | Guide |
 | --- | --- |
 | Platform model, actors, resources, apps, permissions, Portal | [Platform and apps](references/platform-and-apps.md) |
-| Portal views, sidebar navigation, Graph DataTables, design-system components | [Portal extensions](references/portal-extensions.md) |
+| Portal views, sidebar navigation, Graph DataTables, forms, design-system components | [Portal extensions](references/portal-extensions.md) |
 | Sessions, local development, compile, test, deployment and tenant resources | [CLI and testing](references/cli-and-testing.md) |
 | MCP setup and discovery, live Graph metadata, tenant queries | [MCP and Graph](references/mcp-and-graph.md) |
 | Filtrera syntax, types, runtimes and common errors | [Filtrera](references/filtrera.md) |
 | Filtrera diagnostics, lazy execution and actor-result pitfalls | [Filtrera troubleshooting](references/filtrera-pitfalls.md) |
 | Runnable sample components and test setup | [Example app](references/filtrera-examples.md) |
 | HTTP, events, jobs, retries, ACLs and integration boundaries | [Integration patterns](references/integration-patterns.md) |
-| Payment provider app and optional commerce/Portal integration | [Payment provider guide](references/payment-provider.md) |
+| Payments on orders (create, link, charge, capture) and payment provider apps | [Payment provider guide](references/payment-provider.md) |
 | Commerce channel or marketplace order integration | [Sales channel guide](references/sales-channel.md) |
 | Quote-like purchase intent, order preview and line discounts | [Purchase-intent pattern](references/purchase-intent.md) |
 | Importing and recalculating source promotions | [Promotion mirroring](references/promotion-mirroring.md) |
