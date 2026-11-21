@@ -77,7 +77,7 @@ const provider = useGraphDataProvider(query, columns, state, {
 - Set column `size` (pixels). Without it, headers are truncated.
 - Enum fields render as badges coloured with the hues from Graph metadata. A `rowHue` that repeats the state usually looks heavy; use it only for information the columns don't show.
 
-`DataTable` props are `provider`, `contextMenuProvider` and `v-model:selected` (a `Set` of row keys). `@defaultAction` fires on double-click or Enter; a single click only selects. Open details from `defaultAction`, or use `ListDetailLayout` (with `detail-component`) to show details beside the list.
+`DataTable` props are `provider`, `contextMenuProvider` and `v-model:selected` (a `Set` of row keys). `@defaultAction` fires on double-click or Enter; a single click only selects. For a list of records the user works through, use `ListDetailLayout` instead (see [List-detail views](#list-detail-views)).
 
 ### Live updates and refresh
 
@@ -96,6 +96,132 @@ const contextMenuProvider = computed<DataTableContextMenuProvider>(() => {
 });
 watch(live, () => { context.currentView.value!.state.live = live.value; });
 ```
+
+## List-detail views
+
+A list of the app's records that users open one at a time (purchase orders, price lists, claims) uses `ListDetailLayout` from `@hantera/design-system`. The Portal's own deliveries, invoices and IAM lists are built this way. Single clicks select a row and open it in the detail pane next to the list. The user chooses the arrangement from the layout's context menu (side by side, stacked, or no split), and the layout remembers it and the pane size per `cache-key`.
+
+The pattern has three parts:
+
+1. **A list view** that renders `ListDetailLayout` with a `useGraphDataProvider` provider.
+2. **A thin detail component** that the layout renders for the selected record. It embeds the record view.
+3. **A record view** registered on its own, which loads one record from `?id=`. The same view works as a tab (after creating a record, or from a link elsewhere) and inside the detail pane, so there is one detail UI.
+
+```ts
+// portal/index.ts
+const thingsView = portal.registerView('things', ThingsView);
+portal.registerView('thing', ThingView); // reads currentView.query.id
+portal.registerWorkspaceMenuItem({
+  folderPath: 'sales',
+  label: 'Things',
+  action: (context) => context.openView(thingsView.fullPath, {}),
+});
+```
+
+```vue
+<!-- views/ThingsView/ThingsView.vue -->
+<script setup lang="ts">
+import { computed, provide, ref, watch } from 'vue'
+import { Button, ListDetailLayout, TextInput } from '@hantera/design-system'
+import {
+  type GraphDataProviderColumn, type GraphDataProviderQueryRoot, type GraphDataProviderState,
+  useAppContext, useContext, useGraphDataProvider,
+} from '@hantera/portal-app'
+import ThingDetails from './ThingDetails.vue'
+import { thingsViewContextKey } from './things-view-context'
+
+const context = useContext()
+const app = useAppContext()
+const view = context.currentView.value!
+
+const search = ref<string>()
+const query = computed<GraphDataProviderQueryRoot>(() => ({
+  edge: 'things',
+  orderBy: 'createdAt desc',
+  phrase: search.value || undefined,
+  availableFields: [
+    { field: 'thingNumber', label: 'Number' },
+    { field: 'createdAt', label: 'Created' },
+  ],
+}))
+const columns = ref<GraphDataProviderColumn[]>([
+  { queryPath: ['things'], field: 'thingNumber', size: 140 },
+  { queryPath: ['things'], field: 'createdAt', size: 160 },
+])
+
+// Keep the list state and the selection in the view state, so a reload restores both.
+const state = ref<GraphDataProviderState>(view.state.listState ?? { filters: {} })
+watch(state, () => { view.state.listState = state.value }, { deep: true })
+const selection = ref<unknown>(view.state.selection)
+watch(selection, () => { view.state.selection = selection.value })
+
+const provider = useGraphDataProvider(query, columns, state)
+
+// The embedded record view can inject this, for example to select a record it just created.
+provide(thingsViewContextKey, {
+  async select(id: string) {
+    selection.value = id      // the detail opens at once, even before the row is in the list
+    await provider.refresh()  // the list catches up
+  },
+  refresh: () => provider.refresh(),
+})
+
+function createThing() {
+  context.openView(app.getAppViewPath('thing'), { query: { new: 'true' } })
+}
+</script>
+
+<template>
+  <ListDetailLayout
+    :provider="provider"
+    cache-key="my-app.things"
+    :detail-component="ThingDetails"
+    v-model:selection="selection"
+  >
+    <template #list-toolbar>
+      <div class="list-toolbar">
+        <TextInput type="search" v-model.debounce="search" placeholder="Search things..." />
+        <Button variant="primary" @click="createThing">New thing</Button>
+      </div>
+    </template>
+  </ListDetailLayout>
+</template>
+
+<style scoped>
+.list-toolbar { width: 100%; display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+```
+
+```vue
+<!-- views/ThingsView/ThingDetails.vue -->
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { DataRow } from '@hantera/design-system'
+import { useAppContext } from '@hantera/portal-app'
+
+// `row` is undefined when the selected record isn't in the loaded page (just created, or restored
+// after a reload), so render from `selection`.
+const props = defineProps<{ row?: DataRow; selection?: unknown }>()
+const app = useAppContext()
+
+const id = computed(() => props.row?.key ?? (props.selection != null ? String(props.selection) : undefined))
+const uri = computed(() => id.value ? `${app.getAppViewPath('thing')}?id=${id.value}` : undefined)
+</script>
+
+<template>
+  <!-- EmbeddedView is a global component the Portal registers; it is not imported. -->
+  <EmbeddedView v-if="uri" :uri="uri" />
+</template>
+```
+
+- **Row keys and selection:** `useGraphDataProvider` always fetches the root node's id field and uses it as the row key, unless you pass `rowKey`. The selection defaults to that key, so the detail and the record view work with ids, never with display numbers. When the detail needs more than a key, set `toSelection(row)` and `toDetail(selection)` on the provider: they translate between rows and a richer selection value.
+- **The detail component gets two props:** `selection` and `row`, and the layout keys it by the selected record, so it remounts when the selection changes. Keep it thin. Loading and editing belong in the record view, which reads `context.currentView.value!.query.id`.
+- **Inside the detail pane, `inject` reaches the list view's `provide`.** Inject with a default (`inject(thingsViewContextKey, undefined)`), because the record view also runs as its own tab, where no list provides it. Use it to refresh the list after a change, or to select a record the user just created or cloned.
+- **Slots:** `list-toolbar` above the list (search, filters, a New button) and `detail-toolbar` above the detail, beside the pane's close and previous/next controls.
+- **Context menu:** pass the table menu (live updates, Refresh; see above) as `:data-table-context-menu-provider`, not `context-menu-provider`. The layout adds its own split options to the menu.
+- **`cache-key`** stores the split choice and pane size in the browser, shared by every app in the Portal. Prefix it with your app id.
+- **Older design-system versions** don't export `Button`; use `<button class="btn-primary">` there.
+- **Newer design-system versions** add `DetailPaneControls`, which lets a record view show the pane's close and previous/next controls in its own header. Check `entry.d.ts` for it before using it.
 
 ## Ad-hoc Graph reads
 
